@@ -128,3 +128,26 @@ ax.legend()
 # Show the plot
 plt.show()
 # %%
+
+# %% 
+# Setup
+import torch
+N = 5
+f = lambda X: X[:,0]**2 +X[:,1]**3
+x1 = torch.arange(N, dtype=torch.float32, requires_grad=True)
+x2 = torch.arange(N, dtype=torch.float32, requires_grad=True) / 2
+X = torch.stack((x1,x2)).T
+y = f(X)
+I_N = torch.eye(N)
+# Sequential approach
+# jacobian_rows = [torch.autograd.grad(y, x1, v, retain_graph=True)[0]
+#                  for v in I_N.unbind()]
+# jacobian = torch.stack(jacobian_rows)
+# vectorized gradient computation
+def get_vjp(y, X):
+    return torch.autograd.grad(y, X, grad_outputs=torch.ones_like(y), create_graph=True)[0]
+jacobian = torch.vmap(get_vjp)(y,X)
+
+# jacobian = torch.stack(jacobian_rows)
+deriv = lambda u, x: torch.autograd.grad(y, X, grad_outputs=torch.ones_like(u), create_graph=True)[0]
+# %%
